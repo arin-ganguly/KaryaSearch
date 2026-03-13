@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaryaSearch — Worker Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424; --border: #2e2e2e;
+            --amber: #f5a623; --text: #e8e8e8; --text-muted: #888;
+            --red: #e74c3c; --green: #2ecc71;
+            --font-display: 'Bebas Neue', cursive;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; height: 64px;
+            background: rgba(15,15,15,0.95); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 4px; color: var(--amber); text-decoration: none; }
+        .logo span { color: var(--text); }
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border-radius: 2px;
+            font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .nav-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .nav-btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+        .nav-btn-amber { background: var(--amber); color: #000; }
+        .nav-btn-amber:hover { background: #fff; }
+
+        .layout { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 64px); }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            padding: 36px 28px;
+            display: flex; flex-direction: column; gap: 28px;
+            overflow-y: auto;
+        }
+        .section-label { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px; }
+        .profile-card {
+            background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: 24px; text-align: center;
+        }
+        .profile-avatar {
+            width: 72px; height: 72px; background: rgba(245,166,35,0.12); border: 2px solid var(--amber);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-size: 2rem; color: var(--amber); margin: 0 auto 16px;
+        }
+        .profile-name { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 4px; }
+        .profile-title { font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber); letter-spacing: 1px; margin-bottom: 4px; }
+        .profile-rating { font-size: 1rem; color: var(--amber); }
+        .profile-meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* Post Job Form */
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .form-input, .form-textarea {
+            width: 100%; background: var(--bg3); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 14px; font-family: var(--font-body);
+            font-size: 0.88rem; border-radius: 2px; outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-textarea:focus { border-color: var(--amber); }
+        .form-input::placeholder, .form-textarea::placeholder { color: #333; }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .submit-btn {
+            width: 100%; background: var(--amber); color: #000; border: none;
+            padding: 12px; font-family: var(--font-body); font-size: 0.8rem;
+            font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer; border-radius: 2px; transition: all 0.2s;
+        }
+        .submit-btn:hover { background: #fff; }
+
+        .alert { padding: 10px 14px; border-radius: 2px; font-size: 0.82rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.25); color: #ff6b6b; }
+        .alert-success { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.25); color: #2ecc71; }
+
+        /* Main content */
+        .main-content { padding: 36px 40px; overflow-y: auto; }
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+        .tab-btn {
+            padding: 12px 24px; background: none; border: none;
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); cursor: pointer;
+            border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+        }
+        .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+        .tab-btn:hover:not(.active) { color: var(--text); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section-title { font-family: var(--font-display); font-size: 2rem; letter-spacing: 3px; margin-bottom: 4px; }
+        .section-sub { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 24px; }
+
+        .job-list { display: flex; flex-direction: column; gap: 2px; }
+        .job-row {
+            background: var(--bg2); border: 1px solid var(--border); padding: 20px 24px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px; transition: background 0.2s;
+        }
+        .job-row:hover { background: var(--bg3); }
+        .job-row-info { flex: 1; }
+        .job-row-title { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 1px; margin-bottom: 4px; }
+        .job-row-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+        .job-row-chip { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+        .job-row-chip .val { color: var(--text); }
+        .job-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .action-btn {
+            padding: 7px 16px; border-radius: 2px; border: 1px solid;
+            font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+        }
+        .action-btn-red { border-color: rgba(231,76,60,0.3); color: var(--red); background: rgba(231,76,60,0.05); }
+        .action-btn-red:hover { background: rgba(231,76,60,0.15); }
+        .action-btn-green { border-color: rgba(46,204,113,0.3); color: var(--green); background: rgba(46,204,113,0.05); }
+        .action-btn-green:hover { background: rgba(46,204,113,0.15); }
+        .empty-row { padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: 2px; background: var(--bg2); }
+        .empty-row p { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">Karya<span>Search</span></a>
+        <div class="nav-right">
+            <a href="/logOut" class="nav-btn nav-btn-amber">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div>
+                <div class="section-label">// My Profile</div>
+                <div class="profile-card">
+                    <div class="profile-avatar" id="avatarLetter">?</div>
+                    <div class="profile-name" id="profileName">Loading...</div>
+                    <div class="profile-title" id="profileTitle">—</div>
+                    <div class="profile-rating" id="profileRating">☆☆☆☆☆</div>
+                    <div class="profile-meta" id="profileMeta">—</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">// Post New Job</div>
+                {% if success %}
+                <div class="alert alert-success">✓ {{ success }}</div>
+                {% endif %}
+                {% if fail %}
+                <div class="alert alert-error">⚠ {{ fail }}</div>
+                {% endif %}
+                <form action="/addNewJob" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Job Title</label>
+                        <input type="text" name="title" class="form-input" placeholder="e.g. Home Electrician" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rate (₹/hr)</label>
+                        <input type="number" name="rate" class="form-input" placeholder="e.g. 500" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="desc" class="form-textarea" placeholder="Describe your service, experience, availability..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">+ Post Job</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('my-jobs')">🗂 My Jobs</button>
+                <button class="tab-btn" onclick="switchTab('requests')">📥 Hire Requests</button>
+                <button class="tab-btn" onclick="switchTab('confirmed')">✅ Active Jobs</button>
+            </div>
+
+            <!-- My Jobs -->
+            <div id="tab-my-jobs" class="tab-content active">
+                <h2 class="section-title">MY JOBS</h2>
+                <p class="section-sub">// Manage your posted services</p>
+                <div id="myJobsList" class="job-list"><div class="empty-row"><p>Loading...</p></div></div>
+            </div>
+
+            <!-- Requests -->
+            <div id="tab-requests" class="tab-content">
+                <h2 class="section-title">HIRE REQUESTS</h2>
+                <p class="section-sub">// Accept or decline incoming requests from clients</p>
+                <div id="requestsList" class="job-list"><div class="empty-row"><p>Loading...</p></div></div>
+            </div>
+
+            <!-- Confirmed / Active -->
+            <div id="tab-confirmed" class="tab-content">
+                <h2 class="section-title">ACTIVE JOBS</h2>
+                <p class="section-sub">// Jobs you have accepted — in progress</p>
+                <div id="confirmedList" class="job-list"><div class="empty-row"><p>Loading...</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            const tabs = ['my-jobs', 'requests', 'confirmed'];
+            tabs.forEach((t, i) => {
+                document.querySelectorAll('.tab-btn')[i].classList.toggle('active', t === tab);
+                document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+            });
+        }
+
+        function renderEmpty(msg) {
+            return `<div class="empty-row"><p>${msg}</p></div>`;
+        }
+
+        async function loadProfile() {
+            const res = await fetch('/getInfo');
+            const data = await res.json();
+            if (data && data[0]) {
+                const u = data[0];
+                document.getElementById('profileName').textContent = u.name;
+                document.getElementById('profileTitle').textContent = u.title || '—';
+                document.getElementById('avatarLetter').textContent = u.name[0].toUpperCase();
+                const rating = parseInt(u.rating) || 0;
+                document.getElementById('profileRating').textContent = '★'.repeat(rating) + '☆'.repeat(5 - rating) + ' ' + rating + '/5';
+                document.getElementById('profileMeta').textContent = `📍 ${u.city} · 📞 ${u.mobile}`;
+            }
+        }
+
+        async function deleteJob(job_id) {
+            if (!confirm('Delete this job?')) return;
+            await fetch('/deleteMyJob', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `job_id=${job_id}`
+            });
+            loadMyJobs();
+        }
+
+        async function acceptRequest(job_id, worker_id, client_id) {
+            await fetch('/acceptRequest', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `job_id=${job_id}&worker_id=${worker_id}&client_id=${client_id}`
+            });
+            loadRequests();
+            loadConfirmed();
+        }
+
+        async function cancelRequest(job_id, worker_id, client_id) {
+            if (!confirm('Cancel this request?')) return;
+            await fetch('/cancelRequest', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `job_id=${job_id}&worker_id=${worker_id}&client_id=${client_id}`
+            });
+            loadRequests();
+        }
+
+        async function loadMyJobs() {
+            const res = await fetch('/getMyJobs');
+            const data = await res.json();
+            const container = document.getElementById('myJobsList');
+            if (!data || data.length === 0) { container.innerHTML = renderEmpty('// No jobs posted yet — add one from the sidebar'); return; }
+            container.innerHTML = data.map(j => `
+                <div class="job-row">
+                    <div class="job-row-info">
+                        <div class="job-row-title">${j.job_title}</div>
+                        <div class="job-row-meta">
+                            <span class="job-row-chip">Rate: <span class="val" style="color:var(--amber)">₹${j.rate}/hr</span></span>
+                            <span class="job-row-chip">Desc: <span class="val">${(j.description || '—').slice(0,60)}${j.description && j.description.length > 60 ? '...' : ''}</span></span>
+                        </div>
+                    </div>
+                    <div class="job-row-actions">
+                        <button class="action-btn action-btn-red" onclick="deleteJob('${j.job_id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadRequests() {
+            const res = await fetch('/requestDataForWorker');
+            const data = await res.json();
+            const container = document.getElementById('requestsList');
+            if (!data || data.length === 0) { container.innerHTML = renderEmpty('// No pending hire requests'); return; }
+            container.innerHTML = data.map(j => `
+                <div class="job-row">
+                    <div class="job-row-info">
+                        <div class="job-row-title">${j.job_title}</div>
+                        <div class="job-row-meta">
+                            <span class="job-row-chip">Client: <span class="val">${j.name}</span></span>
+                            <span class="job-row-chip">City: <span class="val">${j.city}</span></span>
+                            <span class="job-row-chip">📞 <span class="val">${j.mobile}</span></span>
+                        </div>
+                    </div>
+                    <div class="job-row-actions">
+                        <button class="action-btn action-btn-green" onclick="acceptRequest('${j.job_id}','${j.worker_id}','${j.user_id}')">Accept</button>
+                        <button class="action-btn action-btn-red" onclick="cancelRequest('${j.job_id}','${j.worker_id}','${j.user_id}')">Decline</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadConfirmed() {
+            const res = await fetch('/confirmDataForWorker');
+            const data = await res.json();
+            const container = document.getElementById('confirmedList');
+            if (!data || data.length === 0) { container.innerHTML = renderEmpty('// No active confirmed jobs'); return; }
+            container.innerHTML = data.map(j => `
+                <div class="job-row">
+                    <div class="job-row-info">
+                        <div class="job-row-title">${j.job_title}</div>
+                        <div class="job-row-meta">
+                            <span class="job-row-chip">Client: <span class="val">${j.name}</span></span>
+                            <span class="job-row-chip">City: <span class="val">${j.city}</span></span>
+                            <span class="job-row-chip">📞 <span class="val">${j.mobile}</span></span>
+                        </div>
+                    </div>
+                    <div class="job-row-actions">
+                        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--green); letter-spacing:2px;">● IN PROGRESS</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadProfile();
+        loadMyJobs();
+        loadRequests();
+        loadConfirmed();
+    </script>
+</body>
+</html>

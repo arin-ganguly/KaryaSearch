@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaryaSearch — Find & Post Jobs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424; --border: #2e2e2e;
+            --amber: #f5a623; --amber-dark: #c47d0e; --amber-glow: rgba(245,166,35,0.12);
+            --text: #e8e8e8; --text-muted: #888;
+            --font-display: 'Bebas Neue', cursive;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 60px;
+            background: rgba(15,15,15,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            letter-spacing: 4px;
+            color: var(--amber);
+        }
+        .logo span { color: var(--text); }
+        .nav-links { display: flex; gap: 12px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 2px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+        .btn-primary {
+            background: var(--amber);
+            color: #000;
+        }
+        .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 120px 60px 60px;
+        }
+        .hero-tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--amber);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: fadeUp 0.6s 0.2s ease forwards;
+        }
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(5rem, 12vw, 11rem);
+            line-height: 0.9;
+            letter-spacing: 2px;
+            max-width: 900px;
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.35s ease forwards;
+        }
+        .hero-title .accent { color: var(--amber); }
+        .hero-desc {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            line-height: 1.7;
+            margin-bottom: 48px;
+            font-weight: 300;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.5s ease forwards;
+        }
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.65s ease forwards;
+        }
+        .btn-hero {
+            padding: 16px 40px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 0;
+            margin: 0 60px;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeUp 0.7s 0.8s ease forwards;
+        }
+        .stat-item {
+            flex: 1;
+            padding: 28px 36px;
+            border-right: 1px solid var(--border);
+            background: var(--bg2);
+            transition: background 0.2s;
+        }
+        .stat-item:last-child { border-right: none; }
+        .stat-item:hover { background: var(--bg3); }
+        .stat-num {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            color: var(--amber);
+            letter-spacing: 2px;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+            font-family: var(--font-mono);
+        }
+
+        /* Cards section */
+        .section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 60px;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .section-sub {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 48px;
+            font-family: var(--font-mono);
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+        }
+        .card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            padding: 48px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px;
+            height: 0;
+            background: var(--amber);
+            transition: height 0.3s ease;
+        }
+        .card:hover::before { height: 100%; }
+        .card:hover { background: var(--bg3); transform: translateY(-2px); }
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+        .card-arrow {
+            position: absolute;
+            bottom: 24px; right: 24px;
+            font-size: 1.5rem;
+            color: var(--amber);
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all 0.3s ease;
+        }
+        .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 32px 60px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        footer p { color: var(--text-muted); font-size: 0.8rem; font-family: var(--font-mono); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Amber glow orb */
+        .glow-orb {
+            position: fixed;
+            top: 20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245,166,35,0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-orb"></div>
+
+    <nav>
+        <div class="logo">Karya<span>Search</span></div>
+        <div class="nav-links">
+            <a href="/signInPage" class="btn btn-outline">Sign In</a>
+            <a href="/joinAsClient" class="btn btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <p class="hero-tag">// The modern job marketplace</p>
+        <h1 class="hero-title">
+            FIND THE<br>
+            RIGHT <span class="accent">HIRE</span><br>
+            EVERY TIME.
+        </h1>
+        <p class="hero-desc">Connect skilled workers with clients who need them. Post jobs, browse talent, and get hired — all in one place.</p>
+        <div class="hero-cta">
+            <a href="/joinAsClient" class="btn btn-primary btn-hero">I Need a Worker</a>
+            <a href="/joinAsWorker" class="btn btn-outline btn-hero">I'm a Worker</a>
+        </div>
+    </section>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-num">1K+</div>
+            <div class="stat-label">Active Workers</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">5K+</div>
+            <div class="stat-label">Jobs Posted</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">98%</div>
+            <div class="stat-label">Satisfaction Rate</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">24h</div>
+            <div class="stat-label">Avg. Response Time</div>
+        </div>
+    </div>
+
+    <section class="section">
+        <h2 class="section-title">HOW IT WORKS</h2>
+        <p class="section-sub">// Two paths. One platform.</p>
+        <div class="cards-grid">
+            <a href="/joinAsClient" class="card">
+                <div class="card-icon">🔍</div>
+                <div class="card-title">HIRE TALENT</div>
+                <p class="card-desc">Browse skilled workers in your city. Review ratings, check rates, and send hire requests — get matched in minutes.</p>
+                <div class="card-arrow">→</div>
+            </a>
+            <a href="/joinAsWorker" class="card">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">FIND WORK</div>
+                <p class="card-desc">Post your services, set your rate, and get discovered by clients near you. Build your reputation through ratings.</p>
+                <div class="card-arrow">→</div>
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 KaryaSearch — All rights reserved</p>
+        <p>Developed by Arin Ganguly</p>
+        <p>Built with Flask + MySQL</p>
+    </footer>
+</body>
+</html>

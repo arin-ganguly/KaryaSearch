@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaryaSearch — Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0a0a0a; --bg2: #141414; --bg3: #1e1e1e; --border: #252525;
+            --amber: #f5a623; --text: #e8e8e8; --text-muted: #666;
+            --red: #e74c3c; --green: #2ecc71; --blue: #3498db;
+            --font-display: 'Bebas Neue', cursive;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* Top bar */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 32px; height: 56px;
+            background: var(--bg2); border-bottom: 1px solid var(--border);
+        }
+        .nav-left { display: flex; align-items: center; gap: 32px; }
+        .logo { font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 4px; color: var(--amber); text-decoration: none; }
+        .logo span { color: var(--text); }
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.25);
+            color: var(--red); font-family: var(--font-mono); font-size: 0.65rem;
+            letter-spacing: 3px; padding: 4px 10px; border-radius: 2px; text-transform: uppercase;
+        }
+        .nav-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 16px; border-radius: 2px;
+            font-family: var(--font-body); font-size: 0.78rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .nav-btn-red { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.25); color: var(--red); }
+        .nav-btn-red:hover { background: rgba(231,76,60,0.25); }
+
+        /* Main layout */
+        .main { flex: 1; display: flex; }
+        .sidebar {
+            width: 220px; flex-shrink: 0;
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+        }
+        .sidebar-label { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 3px; color: #3a3a3a; padding: 0 20px; margin-bottom: 8px; text-transform: uppercase; margin-top: 20px; }
+        .sidebar-label:first-child { margin-top: 0; }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 20px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 500;
+            color: var(--text-muted); transition: all 0.15s;
+            border-left: 2px solid transparent;
+        }
+        .sidebar-item:hover { color: var(--text); background: var(--bg3); }
+        .sidebar-item.active { color: var(--amber); border-left-color: var(--amber); background: rgba(245,166,35,0.05); }
+
+        .content { flex: 1; padding: 32px; overflow-y: auto; }
+
+        /* Stats cards */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-bottom: 32px; }
+        .stat-card {
+            background: var(--bg2); border: 1px solid var(--border); padding: 20px 24px;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--amber); }
+        .stat-val { font-family: var(--font-display); font-size: 2.5rem; color: var(--amber); letter-spacing: 2px; }
+        .stat-lbl { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+        /* Section */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-family: var(--font-display); font-size: 1.8rem; letter-spacing: 3px; }
+        .section-sub { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); letter-spacing: 2px; }
+
+        /* Table */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th {
+            text-align: left; padding: 10px 16px;
+            font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px;
+            color: var(--text-muted); text-transform: uppercase;
+            border-bottom: 1px solid var(--border); background: var(--bg2);
+        }
+        .data-table td {
+            padding: 12px 16px; font-size: 0.85rem;
+            border-bottom: 1px solid var(--border); background: var(--bg2);
+            transition: background 0.15s;
+        }
+        .data-table tr:hover td { background: var(--bg3); }
+        .table-tag {
+            display: inline-block; padding: 3px 10px; border-radius: 2px;
+            font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 1px; font-weight: 600;
+        }
+        .tag-client { background: rgba(52,152,219,0.12); color: var(--blue); border: 1px solid rgba(52,152,219,0.2); }
+        .tag-worker { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+        .tag-admin { background: rgba(231,76,60,0.12); color: var(--red); border: 1px solid rgba(231,76,60,0.2); }
+
+        /* View panels */
+        .view-panel { display: none; }
+        .view-panel.active { display: block; }
+
+        .search-input {
+            background: var(--bg2); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 16px; font-family: var(--font-body);
+            font-size: 0.85rem; border-radius: 2px; outline: none; width: 280px;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--amber); }
+        .search-input::placeholder { color: #333; }
+
+        .empty-row { padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: 2px; }
+        .empty-row p { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <a href="/" class="logo">Karya<span>Search</span></a>
+            <div class="admin-badge">⚠ Admin Panel</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted);" id="adminEmail">Loading...</span>
+            <a href="/logOut" class="nav-btn nav-btn-red">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-label">Overview</div>
+            <div class="sidebar-item active" onclick="showView('overview')">📊 Dashboard</div>
+
+            <div class="sidebar-label">Management</div>
+            <div class="sidebar-item" onclick="showView('workers')">⚙ Workers</div>
+            <div class="sidebar-item" onclick="showView('clients')">👤 Clients</div>
+            <div class="sidebar-item" onclick="showView('jobs')">🗂 All Jobs</div>
+
+            <div class="sidebar-label">Activity</div>
+            <div class="sidebar-item" onclick="showView('pending')">📋 Pending Requests</div>
+            <div class="sidebar-item" onclick="showView('accepted')">✅ Accepted Jobs</div>
+        </div>
+
+        <div class="content">
+            <!-- Overview -->
+            <div id="view-overview" class="view-panel active">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">DASHBOARD</div>
+                        <div class="section-sub">// Platform overview</div>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-val" id="statWorkers">—</div>
+                        <div class="stat-lbl">Total Workers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="statClients">—</div>
+                        <div class="stat-lbl">Total Clients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="statJobs">—</div>
+                        <div class="stat-lbl">Active Jobs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="statPending">—</div>
+                        <div class="stat-lbl">Pending Requests</div>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 8px;">
+                    <div>
+                        <div class="section-title">RECENT JOBS</div>
+                        <div class="section-sub">// Latest listed services</div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Worker</th>
+                            <th>City</th>
+                            <th>Rate</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overviewJobsBody">
+                        <tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-family:var(--font-mono); font-size:0.75rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Workers -->
+            <div id="view-workers" class="view-panel">
+                <div class="section-header">
+                    <div><div class="section-title">WORKERS</div><div class="section-sub">// All registered workers</div></div>
+                    <input type="text" class="search-input" placeholder="Search workers..." oninput="filterTable('workersBody', this.value)">
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Title</th><th>City</th><th>Email</th><th>Mobile</th><th>Rating</th></tr></thead>
+                    <tbody id="workersBody"><tr><td colspan="6" style="text-align:center; color:var(--text-muted); font-size:0.75rem; font-family:var(--font-mono);">Loading...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- Clients -->
+            <div id="view-clients" class="view-panel">
+                <div class="section-header">
+                    <div><div class="section-title">CLIENTS</div><div class="section-sub">// All registered clients</div></div>
+                    <input type="text" class="search-input" placeholder="Search clients..." oninput="filterTable('clientsBody', this.value)">
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>City</th><th>Email</th><th>Mobile</th><th>Role</th></tr></thead>
+                    <tbody id="clientsBody"><tr><td colspan="5" style="text-align:center; color:var(--text-muted); font-size:0.75rem; font-family:var(--font-mono);">Loading...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- Jobs -->
+            <div id="view-jobs" class="view-panel">
+                <div class="section-header">
+                    <div><div class="section-title">ALL JOBS</div><div class="section-sub">// Every listed job on the platform</div></div>
+                </div>
+                <table class="data-table">
+                    <thead><tr><th>Job Title</th><th>Worker</th><th>City</th><th>Rate (₹/hr)</th><th>Rating</th><th>Email</th></tr></thead>
+                    <tbody id="allJobsBody"><tr><td colspan="6" style="text-align:center; color:var(--text-muted); font-size:0.75rem; font-family:var(--font-mono);">Loading...</td></tr></tbody>
+                </table>
+            </div>
+
+            <!-- Pending Requests -->
+            <div id="view-pending" class="view-panel">
+                <div class="section-header">
+                    <div><div class="section-title">PENDING REQUESTS</div><div class="section-sub">// Hire requests awaiting confirmation</div></div>
+                </div>
+                <p style="font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted); padding:40px; text-align:center; border:1px dashed var(--border); border-radius:2px;">
+                    // Direct DB access needed for cross-user request view.<br>Use your database management tool to query the <strong style="color:var(--amber)">requested</strong> table.
+                </p>
+            </div>
+
+            <!-- Accepted -->
+            <div id="view-accepted" class="view-panel">
+                <div class="section-header">
+                    <div><div class="section-title">ACCEPTED JOBS</div><div class="section-sub">// Currently active engagements</div></div>
+                </div>
+                <p style="font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted); padding:40px; text-align:center; border:1px dashed var(--border); border-radius:2px;">
+                    // Direct DB access needed for cross-user accepted view.<br>Use your database management tool to query the <strong style="color:var(--amber)">accepted</strong> table.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showView(name) {
+            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('view-' + name).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function filterTable(tbodyId, query) {
+            const tbody = document.getElementById(tbodyId);
+            const rows = tbody.querySelectorAll('tr[data-search]');
+            const q = query.toLowerCase();
+            rows.forEach(row => {
+                row.style.display = row.dataset.search.includes(q) ? '' : 'none';
+            });
+        }
+
+        function emptyRow(colspan, msg) {
+            return `<tr><td colspan="${colspan}" style="text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:0.75rem;padding:32px;">${msg}</td></tr>`;
+        }
+
+        async function loadProfile() {
+            const res = await fetch('/getInfo');
+            const data = await res.json();
+            if (data && data[0]) {
+                document.getElementById('adminEmail').textContent = data[0].email;
+            }
+        }
+
+        async function loadWorkers() {
+            const tbody = document.getElementById('workersBody');
+            try {
+                const res = await fetch('/admin/getAllWorkers');
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = emptyRow(6, '// No workers registered yet');
+                    return;
+                }
+                document.getElementById('statWorkers').textContent = data.length;
+                tbody.innerHTML = data.map(w => `
+                    <tr data-search="${(w.name+w.email+w.city+(w.title||'')).toLowerCase()}">
+                        <td><strong>${w.name}</strong></td>
+                        <td><span class="table-tag tag-worker">${w.title || '—'}</span></td>
+                        <td>${w.city}</td>
+                        <td style="font-family:var(--font-mono);font-size:0.75rem">${w.email}</td>
+                        <td style="font-family:var(--font-mono);font-size:0.75rem">${w.mobile}</td>
+                        <td style="color:var(--amber)">${'★'.repeat(parseInt(w.rating)||0)}${'☆'.repeat(5-(parseInt(w.rating)||0))} ${w.rating}</td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                tbody.innerHTML = emptyRow(6, '// Failed to load workers');
+            }
+        }
+
+        async function loadClients() {
+            const tbody = document.getElementById('clientsBody');
+            try {
+                const res = await fetch('/admin/getAllClients');
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = emptyRow(5, '// No clients registered yet');
+                    return;
+                }
+                document.getElementById('statClients').textContent = data.length;
+                tbody.innerHTML = data.map(c => `
+                    <tr data-search="${(c.name+c.email+c.city).toLowerCase()}">
+                        <td><strong>${c.name}</strong></td>
+                        <td>${c.city}</td>
+                        <td style="font-family:var(--font-mono);font-size:0.75rem">${c.email}</td>
+                        <td style="font-family:var(--font-mono);font-size:0.75rem">${c.mobile}</td>
+                        <td><span class="table-tag ${c.isAdmin ? 'tag-admin' : 'tag-client'}">${c.isAdmin ? 'Admin' : 'Client'}</span></td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                tbody.innerHTML = emptyRow(5, '// Failed to load clients');
+            }
+        }
+
+        async function loadJobs() {
+            const overviewBody = document.getElementById('overviewJobsBody');
+            const allJobsBody = document.getElementById('allJobsBody');
+            try {
+                const res = await fetch('/admin/getAllJobs');
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    const empty = emptyRow(6, '// No jobs listed yet');
+                    overviewBody.innerHTML = empty;
+                    allJobsBody.innerHTML = empty;
+                    return;
+                }
+                document.getElementById('statJobs').textContent = data.length;
+                const rows = data.map(j => `
+                    <tr data-search="${(j.job_title+j.name+j.city).toLowerCase()}">
+                        <td><strong>${j.job_title}</strong></td>
+                        <td>${j.name}</td>
+                        <td>${j.city}</td>
+                        <td style="color:var(--amber)">&#8377;${j.rate}/hr</td>
+                        <td style="color:var(--amber)">${'★'.repeat(parseInt(j.rating)||0)}${'☆'.repeat(5-(parseInt(j.rating)||0))} ${j.rating}</td>
+                        <td style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)">${j.email}</td>
+                    </tr>
+                `).join('');
+                allJobsBody.innerHTML = rows;
+                // Overview shows first 5 only
+                overviewBody.innerHTML = data.slice(0, 5).map(j => `
+                    <tr>
+                        <td><strong>${j.job_title}</strong></td>
+                        <td>${j.name}</td>
+                        <td>${j.city}</td>
+                        <td style="color:var(--amber)">&#8377;${j.rate}/hr</td>
+                        <td>${'★'.repeat(parseInt(j.rating)||0)}${'☆'.repeat(5-(parseInt(j.rating)||0))}</td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                overviewBody.innerHTML = emptyRow(5, '// Failed to load jobs');
+                allJobsBody.innerHTML = emptyRow(6, '// Failed to load jobs');
+            }
+        }
+
+        async function loadPendingAndConfirmed() {
+            try {
+                const [reqRes, confRes] = await Promise.all([
+                    fetch('/requestData'),
+                    fetch('/confirmData')
+                ]);
+                const reqData = await reqRes.json();
+                const confData = await confRes.json();
+                document.getElementById('statPending').textContent = reqData.length || '0';
+                // statJobs will be overwritten by loadJobs if jobs exist, otherwise show confirmed count
+            } catch(e) {}
+        }
+
+        async function init() {
+            await Promise.all([
+                loadProfile(),
+                loadWorkers(),
+                loadClients(),
+                loadJobs(),
+                loadPendingAndConfirmed()
+            ]);
+        }
+
+        init();
+    </script>
+</body>
+</html>

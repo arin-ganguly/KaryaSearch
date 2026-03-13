@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaryaSearch — My Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f0f0f; --bg2: #1a1a1a; --bg3: #242424; --border: #2e2e2e;
+            --amber: #f5a623; --text: #e8e8e8; --text-muted: #888;
+            --red: #e74c3c; --green: #2ecc71;
+            --font-display: 'Bebas Neue', cursive;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; height: 64px;
+            background: rgba(15,15,15,0.95); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 4px; color: var(--amber); text-decoration: none; }
+        .logo span { color: var(--text); }
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border-radius: 2px;
+            font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; text-decoration: none;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .nav-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .nav-btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+        .nav-btn-amber { background: var(--amber); color: #000; }
+        .nav-btn-amber:hover { background: #fff; }
+
+        .layout { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 64px); }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg2);
+            border-right: 1px solid var(--border);
+            padding: 36px 28px;
+            display: flex; flex-direction: column; gap: 28px;
+        }
+        .section-label {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .profile-card {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 24px;
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 72px; height: 72px;
+            background: rgba(245,166,35,0.12);
+            border: 2px solid var(--amber);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--amber);
+            margin: 0 auto 16px;
+        }
+        .profile-name { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 4px; }
+        .profile-email { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); letter-spacing: 1px; }
+
+        /* Edit form */
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .form-input {
+            width: 100%; background: var(--bg3); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 14px; font-family: var(--font-body);
+            font-size: 0.88rem; border-radius: 2px; outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--amber); }
+        .form-input::placeholder { color: #333; }
+        .submit-btn {
+            width: 100%; background: var(--amber); color: #000; border: none;
+            padding: 12px; font-family: var(--font-body); font-size: 0.8rem;
+            font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+            cursor: pointer; border-radius: 2px; transition: all 0.2s;
+        }
+        .submit-btn:hover { background: #fff; }
+
+        .alert { padding: 10px 14px; border-radius: 2px; font-size: 0.82rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.25); color: #ff6b6b; }
+        .alert-success { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.25); color: #2ecc71; }
+
+        /* Main content */
+        .main-content { padding: 36px 40px; overflow-y: auto; }
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+        .tab-btn {
+            padding: 12px 24px;
+            background: none; border: none;
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted); cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+        .tab-btn:hover:not(.active) { color: var(--text); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-title { font-family: var(--font-display); font-size: 2rem; letter-spacing: 3px; margin-bottom: 4px; }
+        .section-sub { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 24px; }
+
+        /* Job rows */
+        .job-list { display: flex; flex-direction: column; gap: 2px; }
+        .job-row {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            padding: 20px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px;
+            transition: background 0.2s;
+        }
+        .job-row:hover { background: var(--bg3); }
+        .job-row-info { flex: 1; }
+        .job-row-title { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: 1px; margin-bottom: 4px; }
+        .job-row-meta { display: flex; gap: 16px; }
+        .job-row-chip { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); }
+        .job-row-chip .val { color: var(--text); }
+        .job-row-actions { display: flex; gap: 8px; }
+        .action-btn {
+            padding: 7px 16px; border-radius: 2px; border: 1px solid;
+            font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .action-btn-red { border-color: rgba(231,76,60,0.3); color: var(--red); background: rgba(231,76,60,0.05); }
+        .action-btn-red:hover { background: rgba(231,76,60,0.15); }
+        .action-btn-green { border-color: rgba(46,204,113,0.3); color: var(--green); background: rgba(46,204,113,0.05); }
+        .action-btn-green:hover { background: rgba(46,204,113,0.15); }
+        .action-btn-amber { border-color: rgba(245,166,35,0.3); color: var(--amber); background: rgba(245,166,35,0.05); }
+        .action-btn-amber:hover { background: rgba(245,166,35,0.15); }
+
+        .empty-row {
+            padding: 40px; text-align: center;
+            border: 1px dashed var(--border); border-radius: 2px;
+            background: var(--bg2);
+        }
+        .empty-row p { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); }
+
+        /* Star rating */
+        .star-rating { display: flex; gap: 4px; margin-bottom: 12px; }
+        .star-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--border); transition: color 0.1s; }
+        .star-btn.selected, .star-btn:hover { color: var(--amber); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">Karya<span>Search</span></a>
+        <div class="nav-right">
+            <a href="/dashboardPage" class="nav-btn nav-btn-outline">← Find Workers</a>
+            <a href="/logOut" class="nav-btn nav-btn-amber">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div>
+                <div class="section-label">// Profile</div>
+                <div class="profile-card">
+                    <div class="profile-avatar" id="avatarLetter">?</div>
+                    <div class="profile-name" id="profileName">Loading...</div>
+                    <div class="profile-email" id="profileEmail">—</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">// Edit Profile</div>
+                {% if success %}
+                <div class="alert alert-success">✓ {{ success }}</div>
+                {% endif %}
+                {% if fail %}
+                <div class="alert alert-error">⚠ {{ fail }}</div>
+                {% endif %}
+                <form action="/updateClientInfo" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" id="editName" class="form-input" placeholder="Full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mobile</label>
+                        <input type="tel" name="mobile" id="editMobile" class="form-input" placeholder="Mobile number" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" id="editCity" class="form-input" placeholder="City" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" id="editEmail" class="form-input" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" id="editPassword" class="form-input" placeholder="New password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Update Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('pending')">📋 Pending Requests</button>
+                <button class="tab-btn" onclick="switchTab('confirmed')">✅ Confirmed Jobs</button>
+            </div>
+
+            <!-- Pending -->
+            <div id="tab-pending" class="tab-content active">
+                <h2 class="section-title">PENDING REQUESTS</h2>
+                <p class="section-sub">// Hire requests you have sent, awaiting worker confirmation</p>
+                <div id="pendingList" class="job-list">
+                    <div class="empty-row"><p>Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- Confirmed -->
+            <div id="tab-confirmed" class="tab-content">
+                <h2 class="section-title">CONFIRMED JOBS</h2>
+                <p class="section-sub">// Active jobs confirmed by workers — close when done</p>
+                <div id="confirmedList" class="job-list">
+                    <div class="empty-row"><p>Loading...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Job / Rate Modal -->
+    <div id="closeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center;">
+        <div style="background:var(--bg2); border:1px solid var(--border); border-radius:2px; padding:36px; max-width:420px; width:90%;">
+            <h3 style="font-family:var(--font-display); font-size:1.8rem; letter-spacing:2px; margin-bottom:8px;">CLOSE JOB</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:24px; font-family:var(--font-mono);">Rate the worker before closing</p>
+            <div class="star-rating" id="starRating">
+                <button class="star-btn" onclick="setStar(1)">★</button>
+                <button class="star-btn" onclick="setStar(2)">★</button>
+                <button class="star-btn" onclick="setStar(3)">★</button>
+                <button class="star-btn" onclick="setStar(4)">★</button>
+                <button class="star-btn" onclick="setStar(5)">★</button>
+            </div>
+            <div style="display:flex; gap:12px; margin-top:8px;">
+                <button class="action-btn action-btn-red" style="flex:1;" onclick="document.getElementById('closeModal').style.display='none'">Cancel</button>
+                <button class="action-btn action-btn-green" style="flex:1;" onclick="submitClose()">Close Job</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let closeData = {};
+        let selectedStar = 0;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach((b, i) => {
+                b.classList.toggle('active', (i === 0 && tab === 'pending') || (i === 1 && tab === 'confirmed'));
+            });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function setStar(n) {
+            selectedStar = n;
+            document.querySelectorAll('.star-btn').forEach((btn, i) => {
+                btn.classList.toggle('selected', i < n);
+            });
+        }
+
+        function openCloseModal(job_id, worker_id, client_id) {
+            closeData = { job_id, worker_id, client_id };
+            selectedStar = 0;
+            document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('closeModal').style.display = 'flex';
+        }
+
+        async function submitClose() {
+            if (!selectedStar) { alert('Please select a star rating.'); return; }
+            const res = await fetch('/closeTheJob', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `job_id=${closeData.job_id}&worker_id=${closeData.worker_id}&client_id=${closeData.client_id}&star=${selectedStar}`
+            });
+            document.getElementById('closeModal').style.display = 'none';
+            loadConfirmed();
+        }
+
+        async function cancelRequest(job_id, worker_id, client_id) {
+            if (!confirm('Cancel this request?')) return;
+            await fetch('/cancelRequest', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `job_id=${job_id}&worker_id=${worker_id}&client_id=${client_id}`
+            });
+            loadPending();
+        }
+
+        function renderEmpty(msg) {
+            return `<div class="empty-row"><p>${msg}</p></div>`;
+        }
+
+        async function loadProfile() {
+            const res = await fetch('/getInfo');
+            const data = await res.json();
+            if (data && data[0]) {
+                const u = data[0];
+                document.getElementById('profileName').textContent = u.name;
+                document.getElementById('profileEmail').textContent = u.email;
+                document.getElementById('avatarLetter').textContent = u.name[0].toUpperCase();
+                document.getElementById('editName').value = u.name;
+                document.getElementById('editMobile').value = u.mobile;
+                document.getElementById('editCity').value = u.city;
+                document.getElementById('editEmail').value = u.email;
+            }
+        }
+
+        async function loadPending() {
+            const container = document.getElementById('pendingList');
+            const res = await fetch('/requestData');
+            const data = await res.json();
+            if (!data || data.length === 0) {
+                container.innerHTML = renderEmpty('// No pending requests');
+                return;
+            }
+            container.innerHTML = data.map(j => `
+                <div class="job-row">
+                    <div class="job-row-info">
+                        <div class="job-row-title">${j.job_title}</div>
+                        <div class="job-row-meta">
+                            <span class="job-row-chip">Worker: <span class="val">${j.name}</span></span>
+                            <span class="job-row-chip">City: <span class="val">${j.city}</span></span>
+                            <span class="job-row-chip">Rate: <span class="val" style="color:var(--amber)">₹${j.rate}/hr</span></span>
+                        </div>
+                    </div>
+                    <div class="job-row-actions">
+                        <button class="action-btn action-btn-red" onclick="cancelRequest('${j.job_id}','${j.worker_id}','${j.client_id}')">Cancel</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadConfirmed() {
+            const container = document.getElementById('confirmedList');
+            const res = await fetch('/confirmData');
+            const data = await res.json();
+            if (!data || data.length === 0) {
+                container.innerHTML = renderEmpty('// No confirmed jobs yet');
+                return;
+            }
+            container.innerHTML = data.map(j => `
+                <div class="job-row">
+                    <div class="job-row-info">
+                        <div class="job-row-title">${j.job_title}</div>
+                        <div class="job-row-meta">
+                            <span class="job-row-chip">Worker: <span class="val">${j.name}</span></span>
+                            <span class="job-row-chip">City: <span class="val">${j.city}</span></span>
+                            <span class="job-row-chip">Rate: <span class="val" style="color:var(--amber)">₹${j.rate}/hr</span></span>
+                        </div>
+                    </div>
+                    <div class="job-row-actions">
+                        <button class="action-btn action-btn-amber" onclick="openCloseModal('${j.job_id}','${j.worker_id}','${j.client_id}')">Close & Rate</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadProfile();
+        loadPending();
+        loadConfirmed();
+    </script>
+</body>
+</html>
