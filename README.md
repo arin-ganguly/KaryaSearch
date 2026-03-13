@@ -6,7 +6,7 @@ The project was basically a hiring website where local labor offers their servic
 Python, Flask, SQL, HTML, CSS, JSON, and JavaScript
 
 # Screenshots
-Folowing are four screenshots showing the design of system.
+Folowing are some screenshots showing the design of system.
 
 Landing Page
 --
