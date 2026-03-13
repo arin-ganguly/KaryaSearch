@@ -1,4 +1,4 @@
-# Mamaar
+# KaryaSearch
 
 The project was basically a hiring website where local labor offers their services and one can hire them by reviewing their ratings and location etc.
 
